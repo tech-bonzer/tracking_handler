@@ -23,16 +23,16 @@ npm install
 Edit `tracking.config.ts`:
 
 ```ts
-import { defineConfig } from './src/config'
+import { defineConfig } from "@/config";
 
 export default defineConfig({
-  klaviyo: 'PUBLIC_API_KEY',
-  google_analytics: ['G-FIRST', 'G-SECOND'],
-  google_tag_manager: 'GTM-EXAMPLE',
-  clarity: null,
-  hotjar: '1234567',
-  chatgpt: null,
-})
+	klaviyo: "PUBLIC_API_KEY",
+	google_analytics: ["G-FIRST", "G-SECOND"],
+	google_tag_manager: "GTM-EXAMPLE",
+	clarity: null,
+	hotjar: "1234567",
+	chatgpt: null,
+});
 ```
 
 Then generate the minified script:
@@ -64,10 +64,10 @@ The script creates `window.bonzer` before consent and tracking events are
 emitted:
 
 ```ts
-window.bonzer.buffer
-window.bonzer.hooks.emit(event)
-window.bonzer.hooks.filter(names, optionalBuffer)
-const unsubscribe = window.bonzer.hooks.subscribe(callback, optionalNames)
+window.bonzer.buffer;
+window.bonzer.hooks.emit(event);
+window.bonzer.hooks.filter(names, optionalBuffer);
+const unsubscribe = window.bonzer.hooks.subscribe(callback, optionalNames);
 ```
 
 Subscriptions replay matching buffered events before receiving live events.
@@ -79,5 +79,14 @@ Existing event names from `consent_handler` are preserved, including
 ## Development
 
 ```sh
+npm run format
+npm run lint
 npm test
+```
+
+Run the complete formatting, linting, type-checking, build, and test pipeline
+before opening a pull request:
+
+```sh
+npm run check
 ```
