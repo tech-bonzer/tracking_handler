@@ -75,6 +75,12 @@ await build({
   legalComments: 'none',
   define: {
     __TRACKING_CONFIG__: JSON.stringify(config),
+    __TRACKING_ENABLED_KLAVIYO__: String(Boolean(config.klaviyo?.length)),
+    __TRACKING_ENABLED_GOOGLE_ANALYTICS__: String(Boolean(config.google_analytics?.length)),
+    __TRACKING_ENABLED_GOOGLE_TAG_MANAGER__: String(Boolean(config.google_tag_manager?.length)),
+    __TRACKING_ENABLED_CLARITY__: String(Boolean(config.clarity?.length)),
+    __TRACKING_ENABLED_HOTJAR__: String(Boolean(config.hotjar?.length)),
+    __TRACKING_ENABLED_CHATGPT__: String(Boolean(config.chatgpt?.length)),
   },
 })
 

@@ -13,11 +13,16 @@ const createId = (): string =>
 
 export function initEvents(): BonzerDataLayer {
   if (window.bonzer?.hooks && Array.isArray(window.bonzer.buffer)) {
+    window.bonzer.hooks.emit({
+      name: 'events.initialized',
+      payload: undefined,
+    })
     return window.bonzer
   }
 
   const buffer = Array.isArray(window.bonzer?.buffer) ? window.bonzer.buffer : []
   const listeners = new Set<Listener>()
+  const currentBuffer = (): BonzerEvent[] => window.bonzer?.buffer ?? buffer
 
   const hooks = {
     emit(input: BonzerEventInput): void {
@@ -27,16 +32,16 @@ export function initEvents(): BonzerDataLayer {
         _id: createId(),
       } as BonzerEvent
 
-      buffer.push(event)
+      currentBuffer().push(event)
       for (const listener of [...listeners]) listener(event)
     },
 
     filter<N extends BonzerEventName>(
       names: readonly N[],
-      source: readonly BonzerEvent[] = buffer,
+      source?: readonly BonzerEvent[],
     ): Array<BonzerEvent<N>> {
       const selected = new Set<BonzerEventName>(names)
-      return source.filter((event): event is BonzerEvent<N> =>
+      return (source ?? currentBuffer()).filter((event): event is BonzerEvent<N> =>
         selected.has(event.name),
       )
     },
@@ -52,7 +57,7 @@ export function initEvents(): BonzerDataLayer {
 
       // Replay a snapshot. New events emitted by a replay callback are handled
       // only by the live listener, avoiding duplicate delivery and global IDs.
-      const previousEvents = [...buffer]
+      const previousEvents = [...currentBuffer()]
       listeners.add(deliver)
       for (const event of previousEvents) deliver(event)
 

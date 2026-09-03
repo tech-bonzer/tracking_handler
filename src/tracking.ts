@@ -206,8 +206,8 @@ function initChatGPT({ config, consent, events }: TrackingContext): void {
       }
 
       window.oaiq = queueFunction() as Oaiq
-      window.oaiq('consent', consent.statistics && consent.marketing)
       window.oaiq('init', { pixelId: id })
+      window.oaiq('consent', consent.statistics && consent.marketing)
       events.hooks.subscribe((event) => {
         if (event.name === 'consent.updated') {
           const state = event.payload as ConsentState
@@ -224,14 +224,17 @@ function initChatGPT({ config, consent, events }: TrackingContext): void {
   }
 }
 
-const initializers = [
-  initKlaviyo,
-  initGoogleAnalytics,
-  initGoogleTagManager,
-  initHotjar,
-  initClarity,
-  initChatGPT,
-]
+const initializers: Array<(context: TrackingContext) => void> = []
+if (__TRACKING_ENABLED_KLAVIYO__) initializers.push(initKlaviyo)
+if (__TRACKING_ENABLED_GOOGLE_ANALYTICS__) {
+  initializers.push(initGoogleAnalytics)
+}
+if (__TRACKING_ENABLED_GOOGLE_TAG_MANAGER__) {
+  initializers.push(initGoogleTagManager)
+}
+if (__TRACKING_ENABLED_HOTJAR__) initializers.push(initHotjar)
+if (__TRACKING_ENABLED_CLARITY__) initializers.push(initClarity)
+if (__TRACKING_ENABLED_CHATGPT__) initializers.push(initChatGPT)
 
 export function updateTracking(context: TrackingContext): void {
   for (const initialize of initializers) initialize(context)

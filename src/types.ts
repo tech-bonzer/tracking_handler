@@ -62,6 +62,12 @@ export interface Oaiq {
 
 declare global {
   const __TRACKING_CONFIG__: TrackingConfig
+  const __TRACKING_ENABLED_KLAVIYO__: boolean
+  const __TRACKING_ENABLED_GOOGLE_ANALYTICS__: boolean
+  const __TRACKING_ENABLED_GOOGLE_TAG_MANAGER__: boolean
+  const __TRACKING_ENABLED_CLARITY__: boolean
+  const __TRACKING_ENABLED_HOTJAR__: boolean
+  const __TRACKING_ENABLED_CHATGPT__: boolean
 
   interface Window {
     bonzer?: BonzerDataLayer
