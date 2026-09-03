@@ -1,71 +1,77 @@
 import type {
-  BonzerDataLayer,
-  BonzerEvent,
-  BonzerEventInput,
-  BonzerEventName,
-} from './types'
+	BonzerDataLayer,
+	BonzerEvent,
+	BonzerEventInput,
+	BonzerEventName,
+} from "@/types";
 
-type Listener = (event: BonzerEvent) => void
+type Listener = (event: BonzerEvent) => void;
 
 const createId = (): string =>
-  globalThis.crypto?.randomUUID?.() ??
-  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+	globalThis.crypto?.randomUUID?.() ??
+	`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 export function initEvents(): BonzerDataLayer {
-  if (window.bonzer?.hooks && Array.isArray(window.bonzer.buffer)) {
-    window.bonzer.hooks.emit({
-      name: 'events.initialized',
-      payload: undefined,
-    })
-    return window.bonzer
-  }
+	if (window.bonzer?.hooks && Array.isArray(window.bonzer.buffer)) {
+		window.bonzer.hooks.emit({
+			name: "events.initialized",
+			payload: undefined,
+		});
+		return window.bonzer;
+	}
 
-  const buffer = Array.isArray(window.bonzer?.buffer) ? window.bonzer.buffer : []
-  const listeners = new Set<Listener>()
-  const currentBuffer = (): BonzerEvent[] => window.bonzer?.buffer ?? buffer
+	const buffer = Array.isArray(window.bonzer?.buffer)
+		? window.bonzer.buffer
+		: [];
+	const listeners = new Set<Listener>();
+	const currentBuffer = (): BonzerEvent[] => window.bonzer?.buffer ?? buffer;
 
-  const hooks = {
-    emit(input: BonzerEventInput): void {
-      const event = {
-        ...input,
-        timestamp: new Date(),
-        _id: createId(),
-      } as BonzerEvent
+	const hooks = {
+		emit(input: BonzerEventInput): void {
+			const event = {
+				...input,
+				timestamp: new Date(),
+				_id: createId(),
+			} as BonzerEvent;
 
-      currentBuffer().push(event)
-      for (const listener of [...listeners]) listener(event)
-    },
+			currentBuffer().push(event);
+			for (const listener of [...listeners]) listener(event);
+		},
 
-    filter<N extends BonzerEventName>(
-      names: readonly N[],
-      source?: readonly BonzerEvent[],
-    ): Array<BonzerEvent<N>> {
-      const selected = new Set<BonzerEventName>(names)
-      return (source ?? currentBuffer()).filter((event): event is BonzerEvent<N> =>
-        selected.has(event.name),
-      )
-    },
+		filter<N extends BonzerEventName>(
+			names: readonly N[],
+			source?: readonly BonzerEvent[],
+		): Array<BonzerEvent<N>> {
+			const selected = new Set<BonzerEventName>(names);
+			return (source ?? currentBuffer()).filter(
+				(event): event is BonzerEvent<N> => selected.has(event.name),
+			);
+		},
 
-    subscribe(
-      callback: Listener,
-      eventNames?: readonly BonzerEventName[],
-    ): () => void {
-      const selected = eventNames ? new Set(eventNames) : undefined
-      const deliver = (event: BonzerEvent): void => {
-        if (!selected || selected.has(event.name)) callback(event)
-      }
+		subscribe<N extends BonzerEventName = BonzerEventName>(
+			callback: (event: BonzerEvent<N>) => void,
+			eventNames?: readonly N[],
+		): () => void {
+			const selected = eventNames
+				? new Set<BonzerEventName>(eventNames)
+				: undefined;
+			const deliver = (event: BonzerEvent): void => {
+				if (!selected || selected.has(event.name)) {
+					callback(event as BonzerEvent<N>);
+				}
+			};
 
-      // Replay a snapshot. New events emitted by a replay callback are handled
-      // only by the live listener, avoiding duplicate delivery and global IDs.
-      const previousEvents = [...currentBuffer()]
-      listeners.add(deliver)
-      for (const event of previousEvents) deliver(event)
+			// Replay a snapshot. New events emitted by a replay callback are handled
+			// only by the live listener, avoiding duplicate delivery and global IDs.
+			const previousEvents = [...currentBuffer()];
+			listeners.add(deliver);
+			for (const event of previousEvents) deliver(event);
 
-      return () => listeners.delete(deliver)
-    },
-  }
+			return () => listeners.delete(deliver);
+		},
+	};
 
-  window.bonzer = { buffer, hooks }
-  hooks.emit({ name: 'events.initialized', payload: undefined })
-  return window.bonzer
+	window.bonzer = { buffer, hooks };
+	hooks.emit({ name: "events.initialized", payload: undefined });
+	return window.bonzer;
 }
