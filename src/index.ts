@@ -1,6 +1,8 @@
+import { initActivity } from "@/activity";
 import type { TrackingConfig } from "@/config";
 import { initConsent } from "@/consent";
 import { initEvents } from "@/events";
+import { initLargestContentfulPaint } from "@/performance";
 import { updateTracking } from "@/tracking";
 
 let started = false;
@@ -10,6 +12,8 @@ export function main(config: TrackingConfig): void {
 	started = true;
 
 	const events = initEvents();
+	initActivity(events);
+	initLargestContentfulPaint(events);
 	events.hooks.subscribe(
 		(event) => {
 			updateTracking({
@@ -31,4 +35,6 @@ export type {
 	BonzerEventInput,
 	BonzerEventName,
 	ConsentState,
+	LargestContentfulPaintPayload,
+	UserInteractionPayload,
 } from "@/types";

@@ -10,13 +10,63 @@ export const root = path.resolve(import.meta.dirname, "..");
 
 export function browser(
 	html = "<!doctype html><html><head></head><body></body></html>",
+	options = {},
 ) {
-	const { document } = parseHTML(html);
-	const window = { document };
+	const parsed = parseHTML(html);
+	const { document } = parsed;
+	const storage = options.storage ?? new Map();
+	const observers = [];
+	const sessionStorage = {
+		getItem: (key) => storage.get(key) ?? null,
+		setItem: (key, value) => storage.set(key, value),
+		removeItem: (key) => storage.delete(key),
+		clear: () => storage.clear(),
+	};
+	class PerformanceObserver {
+		constructor(callback) {
+			this.callback = callback;
+			observers.push(this);
+		}
+
+		observe() {}
+
+		disconnect() {
+			this.disconnected = true;
+		}
+	}
+
+	Object.defineProperty(document, "referrer", {
+		value: options.referrer ?? "",
+	});
+	const window = {
+		document,
+		location: new URL(options.url ?? "https://example.com/"),
+		sessionStorage,
+		PerformanceObserver,
+		Event: parsed.window.Event,
+		addEventListener: document.addEventListener.bind(document),
+		removeEventListener: document.removeEventListener.bind(document),
+		dispatchEvent: document.dispatchEvent.bind(document),
+	};
 	return {
 		window,
 		document,
-		run: (code) => vm.runInNewContext(code, { window, document }),
+		storage,
+		emitLcp(value) {
+			for (const observer of observers) {
+				if (observer.disconnected) continue;
+				observer.callback({
+					getEntries: () => [{ startTime: value }],
+				});
+			}
+		},
+		run: (code) =>
+			vm.runInNewContext(code, {
+				window,
+				document,
+				PerformanceObserver,
+				URL,
+			}),
 	};
 }
 
