@@ -76,6 +76,20 @@ Existing event names from `consent_handler` are preserved, including
 `consent.initialized`, `consent.updated`, and
 `tracking.<provider>.<added|loaded|error>`.
 
+The browser lifecycle also emits:
+
+- `user.interacted` once per page after a click, key press, pointer or mouse
+  movement, touch, scroll, or wheel event. Its payload source is `interaction`.
+- `user.interacted` immediately with a `session` source after same-origin page
+  navigation when activity was recorded within the last five minutes.
+- `performance.lcp` once for the first Largest Contentful Paint observation.
+  Its payload contains the observed `value` in milliseconds.
+
+These events use the same buffer and subscription replay behavior, so code that
+loads after interaction or LCP can subscribe even after either event occurred.
+The activity shortcut uses `sessionStorage`; direct and cross-origin entries
+still wait for a new interaction.
+
 ## Development
 
 ```sh

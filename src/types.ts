@@ -12,8 +12,18 @@ export type Lifecycle = "added" | "loaded" | "error";
 export type TrackingEventName =
 	`tracking.${TrackingProvider}.${Lifecycle}` | "tracking.chatgpt.exists";
 
+export type UserInteractionPayload = {
+	source: "interaction" | "session";
+};
+
+export type LargestContentfulPaintPayload = {
+	value: number;
+};
+
 export type BonzerEventName =
 	| "events.initialized"
+	| "user.interacted"
+	| "performance.lcp"
 	| "consent.initialized"
 	| "consent.updated"
 	| TrackingEventName;
@@ -21,11 +31,15 @@ export type BonzerEventName =
 type BonzerEventPayload<N extends BonzerEventName> =
 	N extends "events.initialized"
 		? undefined
-		: N extends "consent.initialized" | "consent.updated"
-			? ConsentState
-			: N extends TrackingEventName
-				? { _ref: string }
-				: never;
+		: N extends "user.interacted"
+			? UserInteractionPayload
+			: N extends "performance.lcp"
+				? LargestContentfulPaintPayload
+				: N extends "consent.initialized" | "consent.updated"
+					? ConsentState
+					: N extends TrackingEventName
+						? { _ref: string }
+						: never;
 
 export type BonzerEvent<N extends BonzerEventName = BonzerEventName> =
 	N extends BonzerEventName
@@ -39,6 +53,11 @@ export type BonzerEvent<N extends BonzerEventName = BonzerEventName> =
 
 export type BonzerEventInput =
 	| { name: "events.initialized"; payload: undefined }
+	| { name: "user.interacted"; payload: UserInteractionPayload }
+	| {
+			name: "performance.lcp";
+			payload: LargestContentfulPaintPayload;
+	  }
 	| { name: "consent.initialized" | "consent.updated"; payload: ConsentState }
 	| { name: TrackingEventName; payload: { _ref: string } };
 
